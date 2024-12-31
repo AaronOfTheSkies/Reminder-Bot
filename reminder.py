@@ -13,6 +13,7 @@ reminder_channel = None
 started = False
 people = []
 webhook = None
+last_num = None
 
 @bot.event
 async def on_ready():
@@ -20,15 +21,19 @@ async def on_ready():
     num_people = int(text.readline())
     global people
     people = [dict() for _ in range(num_people)]
+    total = 0
 
     for x in range(num_people):
         pfp = text.readline()
         name = text.readline()
         image = text.readline()
         message = text.readline()
-        weight = int(text.readline())
+        weight = float(text.readline())
         people[x] = {'pfp': pfp, 'name': name, 'image': image, 'message': message, 'weight': weight}
+        total += weight
 
+    for x in range(num_people):
+        people[x]['weight'] = people[x]['weight']/total
     print(f"{bot.user} is ready and online!")
 
 @bot.slash_command(name="setchannel", description="Set the bot to send messages in this channel, or a specified channel")
@@ -62,11 +67,22 @@ async def send(ctx: discord.ApplicationContext, message):
 async def remind():
     if started:
         global webhook
-        embeded = discord.Embed()
-        num = random.randint(0, len(people) - 1)
-        value = people[num]
+        global people
+        embeded = discord.Embed(colour = 0xE4A8CA)
+        num = random.uniform(0, 1)
+        print(num)
+        chosen_person = "meow"
+        for character in people:
+            if num - character['weight'] < 0:
+                chosen_person = character
+                break
+            else:
+                num -= character['weight']
+                print("try again " + str(num))
+        value = chosen_person
         embeded.set_image(url = value['image'])
-        embeded.add_field(name = "REFILL REMINDER!!", value = value['message'])
+        embeded.add_field(name = "REFILL REMINDER!! ", value = value['message'])
+        embeded.set_thumbnail(url = value['pfp'])
         await webhook.send(embed = embeded, avatar_url = value['pfp'], username = value['name'])
 
 @bot.slash_command(name="settime", description="Set the bot's refill reminder to a certain amount of minutes")
