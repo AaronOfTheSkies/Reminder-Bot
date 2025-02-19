@@ -7,6 +7,12 @@ import requests
 from discord import Webhook
 import random
 
+#To add:
+#Creating/deleting characters and adding/removing them to the pool and data.txt
+#Giving custom colors as an option
+#Updating different information and saving them to data.txt while running
+#Add multiple possible lines for characters
+
 load_dotenv() # load all the variables from the env file
 bot = discord.Bot()
 reminder_channel = None
@@ -103,8 +109,21 @@ async def startstop(ctx: discord.ApplicationContext):
         remind.start()
         await ctx.respond("Successful, started up.", ephemeral = True)
     else:
-        remind.stop()
+        remind.cancel()
         await ctx.respond("Successful, stopped.", ephemeral = True)
+
+@bot.slash_command(name="list", description="List out all of the possible refill reminders.")
+@commands.has_permissions(manage_messages=True)
+async def list(ctx: discord.ApplicationContext):
+    global webhook
+    global people
+    for character in people:
+        char = character
+        embeded = discord.Embed(colour = 0xE4A8CA)
+        embeded.set_image(url = char['image'])
+        embeded.add_field(name = "REFILL REMINDER!! ", value = char['message'])
+        embeded.set_thumbnail(url = char['pfp'])
+        await webhook.send(embed = embeded, avatar_url = char['pfp'], username = char['name'])
 
 
 bot.run(os.getenv('TOKEN'))
